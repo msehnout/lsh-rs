@@ -1,5 +1,7 @@
 use std::io;
 use std::process::Command;
+use std::env;
+use std::path::Path;
 
 fn lsh_loop() {
     println!("Running command loop");
@@ -11,33 +13,27 @@ fn lsh_loop() {
         io::stdin().read_line(&mut input).unwrap();
         // collect into vector
         let mut tokens : Vec<&str> = input.split_whitespace().collect();
-
-        // iter over vector
-        // for i in iter {
-        //     if i == "exit" {
-        //         return;
-        //     }
-        //     println!("{}", i);
-        // }
-        // run the program
-        // use std::process::Command;
-
-        // lsh_execute
         
         if tokens.len() > 0 {
-            if tokens[0] == "exit" {
-                return;
-            } else {
-                // let output = Command::new(tokens[0]).output().unwrap();
-                // print!("{}", String::from_utf8_lossy(&output.stdout));
-                match Command::new(tokens[0]).output() {
-                    Ok(output) => print!("{}", String::from_utf8_lossy(&output.stdout)),
-                    Err(_) => println!("Error occured!"),
+            match tokens[0] {
+                "exit" => return,
+                "pwd"  => {
+                    let p = env::current_dir().unwrap();
+                    println!("The current directory is {}", p.display());
+                },
+                "cd"   => {
+                    let dir = Path::new(tokens[1]);
+                    env::set_current_dir(&dir).unwrap();
+                },
+                _      => {
+                    match Command::new(tokens[0])
+                                  .args(&tokens[1..])
+                                  .output() {
+                        Ok(output) => print!("{}", String::from_utf8_lossy(&output.stdout)),
+                        Err(_) => println!("Error occured!"),
+                    }
                 }
             }
-
-        } else { 
-            return;
         }
 
     }
